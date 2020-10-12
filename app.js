@@ -1,6 +1,3 @@
-// Set constraints for the video stream
-var constraints = { video: { facingMode: "environment" }, audio: false };
-
 // Define constants
 const cameraView = document.querySelector("#camera--view"),
     cameraSensor = document.querySelector("#camera--sensor"),
@@ -8,16 +5,17 @@ const cameraView = document.querySelector("#camera--view"),
 
 // Access the device camera and stream to cameraView
 function cameraStart() {
-    navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(function(stream) {
-            tracks = stream.getTracks();
-            track = [tracks.length - 1];
-            cameraView.srcObject = stream;
-        })
-    .catch(function(error) {
-        console.error("Oops. Something is broken.", error);
-    });
+    navigator.mediaDevices.enumerateDevices()
+    .then(devices => {
+      cameras = devices.filter(device => device.kind == "videoinput");
+      if (cameras) {
+        cameraId = cameras[cameras.length - 1].deviceId
+        constraints = { deviceId: { exact: cameraId } };
+        return navigator.mediaDevices.getUserMedia({ video: constraints });
+      }
+    })
+    .then(stream => cameraView.srcObject = stream)
+    .catch(e => console.error("Oops. Something is broken.", e));
 }
 
 // Take a picture when cameraTrigger is tapped
